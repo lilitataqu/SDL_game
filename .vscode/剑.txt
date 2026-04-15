@@ -1,0 +1,95 @@
+ C:\msys64\mingw64.exe 
+ 渲染是不断在双缓冲里更新图片，surface是个单缓冲不变的固定图片
+ C:\Users\明耀寒玥\Desktop\SDL_game
+ cd /c/Users/明耀寒玥/Desktop/SDL_game/sdl_game
+ gcc main.c -o game $(pkg-config --cflags --libs sdl2 SDL2_image)
+./game
+mingw32-make
+
+给瓦片按地形分类
+
+
+int calc_damage(Pokemon *atk, Pokemon *def) {
+    int damage = atk->attack + atk->skill.power - def->defense;
+
+    if (damage < 1)
+        damage = 1;
+
+    return damage;
+}
+
+void do_attack(Pokemon *atk, Pokemon *def) {
+    int damage = calc_damage(atk, def);
+
+    def->hp -= damage;
+    if (def->hp < 0)
+        def->hp = 0;
+
+    printf("%s used %s!\n", atk->name, atk->skill.name);
+    printf("%s took %d damage!\n", def->name, damage);
+
+}
+
+void battle_update(Battle *battle) {
+    switch (battle->state) {
+
+    case BATTLE_START:
+        printf("A wild %s appeared!\n", battle->enemy->name);
+        battle->state = PLAYER_TURN;
+        break;
+
+    case PLAYER_TURN:
+        // 现在版本：默认玩家必选攻击
+        do_attack(battle->player, battle->enemy);
+        if (battle->enemy->hp <= 0) {
+            printf("%s fainted!\n", battle->enemy->name);
+            battle->state = BATTLE_END;
+            break;
+        }
+        battle->state = ENEMY_TURN;
+        break;
+
+    case ENEMY_TURN:
+        do_attack(battle->enemy, battle->player);
+        if (battle->player->hp <= 0) {
+            printf("%s fainted!\n", battle->player->name);
+            battle->state = BATTLE_END;
+            break;
+        }
+        battle->state = PLAYER_TURN;
+        break;
+    case BATTLE_END:
+        printf("Battle over!\n");
+        break;
+    }
+}
+
+int main() {
+    Skill tackle = {"Tackle", 5};
+
+    Pokemon pikachu = {
+        "pikaqiu",
+        30, 30,
+        10, 5,
+        tackle
+    };
+
+    Pokemon wild_mon = {
+        "Rattata",
+        25, 25,
+        8, 4,
+        tackle
+    };
+
+    Battle battle = {
+        &pikachu,
+        &wild_mon,
+        BATTLE_START
+    };
+
+    while (battle.state != BATTLE_END) {
+        battle_update(&battle);
+    }
+
+    return 0;
+}
