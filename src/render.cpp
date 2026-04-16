@@ -1,48 +1,31 @@
+#include "world.hpp"
 #include "game.hpp"
 #include "input.hpp"
 #include "tex_manager.hpp"
+#include "player.hpp"
 #include "ttf_manager.hpp"
-void Render_Init(Game *game)
+#include "config.hpp"
+void Render_Init(Game *game,World *world,Player *player)
 {
+    
+
     //出生的地图
-    game->world.map = &(game->world.maps[0][0]);
-    // 初始化英雄位置和属性
-    game->hero.w = 32;
-    game->hero.h = 64;
-    game->hero.tile_x = 12;  // 起始瓦片位置
-    game->hero.tile_y = 9;
-     //小数，计算时用到的世界坐标
-    game->hero.x = game->hero.tile_x * TILE_SIZE;
-    game->hero.y = game->hero.tile_y * TILE_SIZE;
-    //int 屏幕坐标
-    game->hero.px = game->hero.tile_x * TILE_SIZE;
-    game->hero.py =  game->hero.tile_y * TILE_SIZE;
-    //帧坐标
-    game->hero.start_x = game->hero.x;
-    game->hero.start_y = game->hero.y;
-
-    game->hero.move_frames = MOVE_FRAMES;
-    game->hero.move_frame_count = 0;
-    game->hero.moving = false;
-    game->hero.facing = DIR_DOWN;
-
-     //摄像机左上角在世界中的位置 摄像机大小 = 窗口大小
-    game->camera.x = 0 ,game->camera.y = 0,
-    game->camera.w = game->window_w,game->camera.h = game->window_h;
+    world->map = &(world->maps[0][0]);
+    //摄像机左上角在世界中的位置 摄像机大小 = 窗口大小
+    world->camera.x = 0 ,world->camera.y = 0,
+    world->camera.w = game->window_w,world->camera.h = game->window_h;
     //视图距离
-    game->view_x = (game->camera.w - game->hero.w)/2;
-    game->view_y = (game->camera.h - game->hero.h)/2;
+    game->view_x = (world->camera.w - player->w)/2;
+    game->view_y = (world->camera.h - player->h)/2;
     //摄像头坐标
-    game->camera.x = game->hero.px - game->view_x;
-    game->camera.y = game->hero.py - game->view_y;
-    //人物在屏幕的大小
-    game->hero.hero_screen.w =  game->hero.w;
-    game->hero.hero_screen.h =  game->hero.h;
+    world->camera.x = player->px - game->view_x;
+    world->camera.y = player->py - game->view_y;
+   
     //人物渲染的起始坐标，和px一样
-    game->hero.hero_screen.x = game->hero.px - game->camera.x;
-    game->hero.hero_screen.y = game->hero.py - game->camera.y - TILE_SIZE;
+    player->hero_screen.x = player->px - world->camera.x;
+    player->hero_screen.y = player->py - world->camera.y - TILE_SIZE;
 
-    game->hero.moving = 0;
+    player->moving = 0;
 
     //画布
     game->rect.w = game->window_w,game->rect.h = game->window_h;
@@ -59,30 +42,14 @@ void Render_Init(Game *game)
                                 font,
                                "河南",
                                 {255,255,255,255});
-    /*
-    //试着设置传送点
-    game->world.maps[0][0].portals[0].map1 = 0;
-    game->world.maps[0][0].portals[0].map2 = 1;
-    game->world.maps[0][0].portals[0].to_x = 14;
-    game->world.maps[0][0].portals[0].to_y = 13;
-    game->world.maps[0][0].portals[0].from_x = 16;
-    game->world.maps[0][0].portals[0].from_y = 15;
-
-    game->world.maps[0][1].portals[0].map1 = 0;
-    game->world.maps[0][1].portals[0].map2 = 0;
-    game->world.maps[0][1].portals[0].to_x = 16;
-    game->world.maps[0][1].portals[0].to_y = 15;
-    game->world.maps[0][1].portals[0].from_x = 14;
-    game->world.maps[0][1].portals[0].from_y = 13;
-    */
 }
 
-void draw_map(Game *game)
+void draw_map(Game *game,World *world,Player *player,Tex_Manager *tex)
 {
    
     // 渲染纹理（透明自动生效）
-    SDL_RenderCopy(game->rdr, game->world.map->bg, &(game->camera), NULL);
-    SDL_RenderCopy(game->rdr, game->hero.hero, NULL,&(game->hero.hero_screen));
+    SDL_RenderCopy(game->rdr, world->map->bg, &(world->camera), NULL);
+    SDL_RenderCopy(game->rdr, tex->player, NULL,&(player->hero_screen));
 
 }
 
@@ -130,18 +97,18 @@ void draw_ui(Game *game , Tex_Manager *tex)
     SDL_RenderCopy(game->rdr,game->sid,NULL,NULL);
 }
 
-void draw(Game *game , Tex_Manager *tex)
+void draw(Game *game , Tex_Manager *tex,World *world,Player *player)
 {
     //切换渲染目标
     SDL_SetRenderTarget(game->rdr,game->canvas);
     //清空屏幕
     SDL_RenderClear(game->rdr);
-    if(game->iu == 1)
-    {
-        player_update(game,tex);
-        draw_map(game);  
-    }
     if(game->iu == 0)
+    {
+        player->player_update(world , player , tex);
+        draw_map(game,world,player,tex);  
+    }
+    if(game->iu == 1)
     {
         draw_bg(game,tex);
         draw_pokemon_btl(game,tex);

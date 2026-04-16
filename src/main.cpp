@@ -6,19 +6,22 @@
 #include "input.hpp"
 #include "tex_manager.hpp"
 #include "render.hpp"
+#include "config.hpp"
 int main(int argc, char *argv[])
 {
     Game game;
+    Player player;
+    World world;
     //创建窗口 渲染器 引入 人物 地图
-    if (Game_Init(&game) != 0) {
-    Game_Quit(&game);
+    if (Game_Init(&game,&world,&player) != 0) {
+    Game_Quit(&game,&world,&player);
     return 1;
 }
     
-    Render_Init(&game);
+    Render_Init(&game,&world,&player);
     
     game.running = 1;
-    game.iu = 1 ;
+    game.iu = 0 ;
 
     //TEXS tex;
     //加载渲染纹理
@@ -42,7 +45,7 @@ int main(int argc, char *argv[])
         
         //player_update(&game);
         
-        draw(&game,&tex);
+        draw(&game,&tex,&world,&player);
 
         //刷新屏幕，并等待一个帧
         Uint32 frame_cost = SDL_GetTicks() - frame_start;
@@ -52,7 +55,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    Game_Quit(&game);
+    Game_Quit(&game,&world,&player);
     
     return 0;
 }

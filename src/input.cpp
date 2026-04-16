@@ -1,30 +1,31 @@
+#include "world.hpp"
 #include "game.hpp"
 #include "tex_manager.hpp"
-
-void map_update(Game *game)
+#include "player.hpp"
+#include "config.hpp"
+void map_update(World *world,Player *player)
 {
      //小数，计算时用到的世界坐标
-    game->hero.x = game->hero.tile_x * TILE_SIZE;
-    game->hero.y = game->hero.tile_y * TILE_SIZE;
+    player->x = player->tile_x * TILE_SIZE;
+    player->y = player->tile_y * TILE_SIZE;
     //int 屏幕坐标
-    game->hero.px = game->hero.tile_x * TILE_SIZE;
-    game->hero.py =  game->hero.tile_y * TILE_SIZE;
+    player->px = player->tile_x * TILE_SIZE;
+    player->py =  player->tile_y * TILE_SIZE;
     //帧坐标
-    game->hero.start_x = game->hero.x;
-    game->hero.start_y = game->hero.y;
-    game->hero.move_frame_count = 0;
-    game->hero.moving = false;
+    player->start_x = player->x;
+    player->start_y = player->y;
+    player->move_frame_count = 0;
+    player->moving = false;
 
     //摄像机左上角在世界中的位置 摄像机大小 = 窗口大小
-    game->camera.x = 0 ,game->camera.y = 0,
+    world->camera.x = 0 ,world->camera.y = 0,
     //人物渲染的起始坐标，和px一样
-    game->hero.hero_screen.x = game->hero.px - game->camera.x;
-    game->hero.hero_screen.y = game->hero.py - game->camera.y - TILE_SIZE;
+    player->hero_screen.x = player->px - world->camera.x;
+    player->hero_screen.y = player->py - world->camera.y - TILE_SIZE;
 
-    game->hero.moving = 0;
+    player->moving = 0;
     return ;
 }
-
 
 Direction get_dir_from_key(const Uint8* keys)
 {
@@ -51,123 +52,123 @@ void dir_to_offset(Direction dir, int* dx, int* dy)
 }
 
 
-void player_update(Game *game,Tex_Manager *tex)
+void Player::player_update(World *world,Player *player,Tex_Manager *tex)
 {
     const Uint8* keys = SDL_GetKeyboardState(NULL);
     Direction dir = get_dir_from_key(keys);
 
     // 永远允许更新朝向
     if (dir != DIR_NONE)
-        game->hero.facing = dir;
+        player->facing = dir;
 
     // 只有不在移动中，才尝试移动
-    if (!game->hero.moving && dir != DIR_NONE) {
+    if (!player->moving && dir != DIR_NONE) {
         int dx, dy;
         dir_to_offset(dir, &dx, &dy);
 
-        int nx = game->hero.tile_x + dx;
-        int ny = game->hero.tile_y + dy;
+        int nx = player->tile_x + dx;
+        int ny = player->tile_y + dy;
 
-        if (game->world.map->logicmap.logic[ny][nx].walkable) {
-            game->hero.moving = 1;
+        if (world->map->logicmap.logic[ny][nx].walkable) {
+            player->moving = 1;
             
-            // Store starting position for interpolation
-            game->hero.start_x = game->hero.x;
-            game->hero.start_y = game->hero.y;
+            // 记住开始移动坐标，开始移动
+            player->start_x = player->x;
+            player->start_y = player->y;
             
-            // Reset frame counter
-            game->hero.move_frame_count = 0;
+            // 第0帧
+            player->move_frame_count = 0;
 
-            game->hero.tile_x = nx;
-            game->hero.tile_y = ny;
+            player->tile_x = nx;
+            player->tile_y = ny;
 
-            game->hero.px = nx * TILE_SIZE;
-            game->hero.py = ny * TILE_SIZE;
+            player->px = nx * TILE_SIZE;
+            player->py = ny * TILE_SIZE;
         }
     }
 
     // 如果正在移动，执行插值
-    if (game->hero.moving) 
+    if (player->moving) 
     {
         // 第一帧
-        game->hero.move_frame_count++;
+        player->move_frame_count++;
         
         // 8帧间的差距
-        float progress = (float)game->hero.move_frame_count / (float)game->hero.move_frames;
+        float progress = (float)player->move_frame_count / (float)player->move_frames;
         
         
-        game->hero.x = game->hero.start_x + (game->hero.px - game->hero.start_x) * progress;
-        game->hero.y = game->hero.start_y + (game->hero.py - game->hero.start_y) * progress;
+        player->x = player->start_x + (player->px - player->start_x) * progress;
+        player->y = player->start_y + (player->py - player->start_y) * progress;
         // 摄像头跟随
-        game->camera.x = (int)(game->hero.x - game->view_x);
-        game->camera.y = (int)(game->hero.y - game->view_y);
+        world->camera.x = (int)(player->x - (world->camera.w - player->w)/2);
+        world->camera.y = (int)(player->y - (world->camera.h - player->h)/2);
         
         // 摄像头范围
-        if (game->camera.x < 0)
-            game->camera.x = 0;
-        if (game->camera.x > game->world.map->map_w - game->camera.w)
-            game->camera.x = game->world.map->map_w - game->camera.w;
-        if (game->camera.y < 0)
-            game->camera.y = 0;
-        if (game->camera.y > game->world.map->map_h - game->camera.h)
-            game->camera.y = game->world.map->map_h - game->camera.h;
+        if (world->camera.x < 0)
+            world->camera.x = 0;
+        if (world->camera.x > world->map->map_w - world->camera.w)
+            world->camera.x = world->map->map_w - world->camera.w;
+        if (world->camera.y < 0)
+            world->camera.y = 0;
+        if (world->camera.y > world->map->map_h - world->camera.h)
+            world->camera.y = world->map->map_h - world->camera.h;
 
         // Update hero screen position for rendering
-        game->hero.hero_screen.x = (int)(game->hero.x - game->camera.x);
-        game->hero.hero_screen.y = (int)(game->hero.y - game->camera.y) - TILE_SIZE;
+        player->hero_screen.x = (int)(player->x - world->camera.x);
+        player->hero_screen.y = (int)(player->y - world->camera.y) - TILE_SIZE;
         // Check if movement is complete
-        if (game->hero.move_frame_count >= game->hero.move_frames)
+        if (player->move_frame_count >= player->move_frames)
         {
             // 将屏幕坐标更新到世界坐标
-            game->hero.x = game->hero.px;
-            game->hero.y = game->hero.py;
+            player->x = player->px;
+            player->y = player->py;
             
             
             // 移动摄像头
-            game->camera.x = (game->hero.px - game->view_x);
-            game->camera.y = (game->hero.py - game->view_y);
+            world->camera.x = (player->px - (world->camera.w - player->w)/2);
+            world->camera.y = (player->py - (world->camera.h - player->h)/2);
             
-            if (game->camera.x < 0)
-                game->camera.x = 0;
-            if (game->camera.x > game->world.map->map_w - game->camera.w)
-                game->camera.x = game->world.map->map_w - game->camera.w;
-            if (game->camera.y < 0)
-                game->camera.y = 0;
-            if (game->camera.y > game->world.map->map_h - game->camera.h)
-                game->camera.y = game->world.map->map_h - game->camera.h;
+            if (world->camera.x < 0)
+                world->camera.x = 0;
+            if (world->camera.x > world->map->map_w - world->camera.w)
+                world->camera.x = world->map->map_w - world->camera.w;
+            if (world->camera.y < 0)
+                world->camera.y = 0;
+            if (world->camera.y > world->map->map_h - world->camera.h)
+                world->camera.y = world->map->map_h - world->camera.h;
             
-            game->hero.hero_screen.x = game->hero.px - game->camera.x;
-            game->hero.hero_screen.y = game->hero.py - game->camera.y - TILE_SIZE;
+            player->hero_screen.x = player->px - world->camera.x;
+            player->hero_screen.y = player->py - world->camera.y - TILE_SIZE;
             
             // 清空
-            game->hero.moving = 0;
+            player->moving = 0;
         }
     }
-    if (game->world.map->logicmap.logic[game->hero.tile_y][game->hero.tile_x].exit_id == 1)
+    if (world->map->logicmap.logic[player->tile_y][player->tile_x].exit_id == 1)
         {
             //找到传送点瓦片起始坐标
             int i = 0;
-            while (game->hero.tile_x != game->world.map->portals[i].from_x &&
-                   game->hero.tile_y != game->world.map->portals[i].from_y )
+            while (player->tile_x != world->map->portals[i].from_x &&
+                   player->tile_y != world->map->portals[i].from_y )
             {
                i++;
             }
             
-            game->world.mapup = true;
-            if (game->world.mapup == true)
+            world->mapup = true;
+            if (world->mapup == true)
         {
             //更新英雄瓦片坐标再更新地图
-            game->hero.tile_x = game->world.map->portals[i].to_x;  // 起始瓦片位置
-            game->hero.tile_y = game->world.map->portals[i].to_y;
-            game->world.map = &(game->world.maps[game->world.map->portals[i].map1][game->world.map->portals[i].map2]);
-            map_update(game);
-            game->world.mapup = false;
+            player->tile_x = world->map->portals[i].to_x;  // 起始瓦片位置
+            player->tile_y = world->map->portals[i].to_y;
+            world->map = &(world->maps[world->map->portals[i].map1][world->map->portals[i].map2]);
+            map_update(world,player);
+            world->mapup = false;
         }
             return;
         }
-        if(game->world.map->logicmap.logic[game->hero.tile_y][game->hero.tile_x].event_id == grassland)
+        if(world->map->logicmap.logic[player->tile_y][player->tile_x].event_id == grassland)
         {
-            game->iu = 0;
+            player->battle_state = true;
             tex->btl_bg[0].able = 1;
             tex->pokemon_tex[0].able = 1;
             tex->pokemon_tex[1].able = 1;

@@ -3,6 +3,30 @@
 
 Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
 {
+    //渲染主角
+    SDL_Surface *player_face = IMG_Load("asset/hero.png");
+
+    if (player_face== NULL)            
+    {
+        printf("IMG_Load: %s\n", SDL_GetError());
+        getchar();
+        SDL_Quit();
+        return ;
+    }
+
+    //给主角接受，
+    player = SDL_CreateTextureFromSurface(renderer, player_face);
+    //释放临时表面
+    SDL_FreeSurface(player_face);
+
+    //检测
+     if (!player)
+    {
+        printf("CreateTexture Error: %s\n", SDL_GetError());
+        getchar();
+        return ;
+    }
+
     //战斗背景
     bg_paths = {
         "asset/battlegrass.png"
@@ -64,6 +88,9 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
 
 Tex_Manager::~Tex_Manager()
 {
+    //销毁玩家
+    SDL_DestroyTexture(player);
+
     //销毁战斗背景
     for(int i = 0; i < BATTLE_BG_NUM; i++)
     {
