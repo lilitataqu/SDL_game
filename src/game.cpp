@@ -92,14 +92,14 @@ int Game_Init(Game *game,World *world,Player *player)
     return -1;
     }
     
-
+/*  //整个图片渲染
     //创建背景地图
     load_map("asset/maps/0_0.png",&(world->maps[0][0]),game->rdr);
     //加载逻辑地图
     load_logic_map_from_mask("asset/maps/0_0_mask.png", &(world->maps[0][0]));
-    //加载地图传送点
+   //加载地图传送点
     load_map_portal("asset/portals/0_0.txt",&(world->maps[0][0]));
-
+    
     load_map("asset/maps/0_1.png",&(world->maps[0][1]),game->rdr);
     load_logic_map_from_mask("asset/maps/0_1_mask.png", &(world->maps[0][1]));
     load_map_portal("asset/portals/0_1.txt",&(world->maps[0][1]));
@@ -108,7 +108,7 @@ int Game_Init(Game *game,World *world,Player *player)
     load_map_portal("asset/portals/1_0.txt",&(world->maps[1][0]));
     //load_pokemon("asset/004b.png",game->battle.player,game->rdr);
     //load_pokemon("asset/007.png",game->battle.enemy,game->rdr);
-    //game->battle.player->rect.x = 112;
+    //game->battle.player->rect.x = 112;*/
     //一开始地图没变
     world->mapup = false;
 
@@ -116,7 +116,7 @@ int Game_Init(Game *game,World *world,Player *player)
 
     return 0;
 }
-
+/*
 void load_map(const char* path, Maps *map,SDL_Renderer *rdr)
 {
     SDL_Surface* surf = IMG_Load(path);
@@ -235,6 +235,7 @@ fflush(stdout);
             map->portals[0].from_y,
             map->portals[0].to_x,
             map->portals[0].to_y);*/
+            /*
     return ;
 }
 
@@ -281,14 +282,15 @@ void load_img(const char* path,SDL_Texture *img,SDL_Renderer *rdr)
     SDL_FreeSurface(surf);
    
     return ;
-}
+}*/
 
 
 void Game_Quit(Game *game,World *world,Player *player)
 {
+    /*
     SDL_DestroyTexture(world->maps[0][0].bg);
     SDL_DestroyTexture(world->maps[0][1].bg);
-    SDL_DestroyTexture(world->maps[1][0].bg);
+    SDL_DestroyTexture(world->maps[1][0].bg);*/
     TTF_Quit();
     IMG_Quit();
     SDL_DestroyRenderer(game->rdr);     //销毁渲染器

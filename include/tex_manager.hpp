@@ -30,8 +30,8 @@ typedef struct
 {
     SDL_Texture *tex;
     SDL_Rect rect;
-    int able;
-    int layer;
+    int able = 0;
+    int layer = 0;
 }TEX;
 /*
 typedef struct
@@ -43,7 +43,7 @@ typedef struct
 class Tex_Manager
 {
 private:
-    
+    std::vector<std::string> tiles_paths;
     std::vector<std::string> bg_paths;
     std::vector<std::string> pokemon_paths;
     std::vector<std::string> ui_paths;
@@ -51,6 +51,7 @@ public:
     TEX btl_bg[BATTLE_BG_NUM];
     TEX pokemon_tex[BATTLE_POKEMON_NUM];
     TEX ui[UI_NUM];
+    SDL_Texture *tiles;
     SDL_Texture *player;
     Tex_Manager(SDL_Renderer* renderer);
     ~Tex_Manager();

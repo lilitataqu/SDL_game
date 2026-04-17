@@ -38,5 +38,5 @@ public:
 
     ~Player();
 
-    void player_update(World *world,Player *player,Tex_Manager *tex);
+    void player_update(World *world,Tex_Manager *tex);
 };

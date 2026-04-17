@@ -46,9 +46,53 @@ void Render_Init(Game *game,World *world,Player *player)
 
 void draw_map(Game *game,World *world,Player *player,Tex_Manager *tex)
 {
-   
-    // 渲染纹理（透明自动生效）
-    SDL_RenderCopy(game->rdr, world->map->bg, &(world->camera), NULL);
+    int start_col = world->camera.x / TILE_SIZE;
+    int start_row = world->camera.y / TILE_SIZE;
+    int end_col   = (world->camera.x + game->window_w) / TILE_SIZE + 1;
+    int end_row   = (world->camera.y + game->window_h) / TILE_SIZE + 1;
+
+    // 钳位，防止越界
+    if (start_col < 0) start_col = 0;
+    if (start_row < 0) start_row = 0;
+    if (end_col >= world->map->map_w) end_col = world->map->map_w - 1;
+    if (end_row >= world->map->map_h) end_row = world->map->map_h - 1;
+    SDL_Rect dst;
+    for (int row = start_row; row <= end_row; row++) {
+        for (int col = start_col; col <= end_col; col++) {
+            LogicTile tile = world->get_tile(world->map->logicmap[row][col]);
+            
+            dst.x = col * TILE_SIZE - world->camera.x;
+            dst.y = row * TILE_SIZE - world->camera.y;
+            dst.w = TILE_SIZE;
+            dst.h = TILE_SIZE;
+            SDL_RenderCopy(game->rdr, tex->tiles, &tile.tile_rect, &dst);
+        }
+    }
+    /*
+    SDL_Rect rect;
+    rect.x = ((world->camera.x)/32)*32;
+    rect.y = (world->camera.y/32)*32;
+    rect.w = TILE_SIZE;
+    rect.h = TILE_SIZE;
+    LogicTile tile;
+    // 渲染纹理（透明自动生效）,因为摄像头跟随有中间值，所以渲染比摄像头大点
+    for(int i= rect.x/32 ; i < (rect.x + game->window_w + 32)/32 ; i++)
+    {
+        for(int j=rect.y/32 ; j < (rect.y + game->window_h + 32)/32; j++)
+        {
+            tile = world->get_tile(world->map->logicmap[j][i]);
+            SDL_RenderCopy(
+                game->rdr,
+                tex->tiles , 
+                &(tile.tile_rect),
+                &(rect));
+            
+            rect.y += TILE_SIZE;
+        }
+        rect.x += TILE_SIZE;
+        rect.y = (world->camera.y/32)*32;
+    }
+    */
     SDL_RenderCopy(game->rdr, tex->player, NULL,&(player->hero_screen));
 
 }
@@ -103,19 +147,19 @@ void draw(Game *game , Tex_Manager *tex,World *world,Player *player)
     SDL_SetRenderTarget(game->rdr,game->canvas);
     //清空屏幕
     SDL_RenderClear(game->rdr);
-    if(game->iu == 0)
+    if(player->battle_state == false)
     {
-        player->player_update(world , player , tex);
+        player->player_update(world , tex);
         draw_map(game,world,player,tex);  
     }
-    if(game->iu == 1)
+    if(player->battle_state == true)
     {
         draw_bg(game,tex);
         draw_pokemon_btl(game,tex);
     }
     draw_ui(game,tex);
     SDL_SetRenderTarget(game->rdr,NULL);
-    SDL_RenderClear(game->rdr);
+    //SDL_RenderClear(game->rdr);
     SDL_RenderCopy(game->rdr,game->canvas,NULL,&(game->rect));
     //渲染呈现
     SDL_RenderPresent(game->rdr);

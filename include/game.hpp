@@ -57,11 +57,11 @@ typedef struct {
 
     SDL_Rect rect;
     
+    
     int window_w;
     int window_h;
 
     int running ;
-    int iu;
 
     int view_x,view_y;
     SDL_Texture *sid;

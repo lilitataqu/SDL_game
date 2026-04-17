@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     Render_Init(&game,&world,&player);
     
     game.running = 1;
-    game.iu = 0 ;
+    player.battle_state = false;
 
     //TEXS tex;
     //加载渲染纹理

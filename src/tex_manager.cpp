@@ -27,6 +27,10 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
         return ;
     }
 
+    //瓦片集
+    tiles_paths = {
+        "asset/test.png"
+    };
     //战斗背景
     bg_paths = {
         "asset/battlegrass.png"
@@ -41,6 +45,12 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
         "asset/cloth.png"
     };
 
+    //渲染瓦片集
+    tiles = IMG_LoadTexture(renderer,tiles_paths[0].c_str());
+    if(tiles == nullptr)
+    {
+        printf("Texture load failed: %s\n", tiles_paths[0].c_str());
+    }
     //渲染战斗背景
     for(int i = 0; i < BATTLE_BG_NUM; i++)
     {
