@@ -3,6 +3,9 @@
 
 Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
 {
+    // 初始化 SDL2_image PNG 支持
+    IMG_Init(IMG_INIT_PNG);
+
     //渲染主角
     SDL_Surface *player_face = IMG_Load("asset/hero.png");
 
@@ -29,7 +32,7 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
 
     //瓦片集
     tiles_paths = {
-        "asset/test.png"
+        "asset/png/tiles2.png"
     };
     //战斗背景
     bg_paths = {

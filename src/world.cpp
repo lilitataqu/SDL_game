@@ -7,17 +7,13 @@ using namespace tinyxml2;
 #include "config.hpp"
 World::World()
 {
-    tiles[0].tile_rect.x = 0 ;
-    tiles[0].tile_rect.y = 0 ;
-    tiles[0].tile_rect.w = 32 ;
-    tiles[0].tile_rect.h = 32 ;
-    if(!(load_map("asset/test.tmj")))
+    if(!(load_map("asset/maps/0_0.tmj")))
     {
-        printf("asset\test.tmj load faile \n");
+        printf("asset/maps/0_0.tmj load faile \n");
     }
-    if(!(load_tileset("asset/tiles.tsx")))
+    if(!(load_tileset("asset/png/tiles2.tsj")))
     {
-        printf(" asset\tiles.tsx load faile \n");
+        printf(" asset/png/tiles2.tsj load faile \n");
     }
 }
 bool World::load_map(const std::string& filename){
@@ -35,20 +31,63 @@ bool World::load_map(const std::string& filename){
     Maps& current = maps[0][0];
     current.map_w = width;
     current.map_h = height;
-    current.logicmap.resize(height, std::vector<uint8_t>(width, 0));
+    current.logicmap.resize(height, std::vector<int>(width, 0));
     for (size_t i = 0; i < data.size(); ++i)
     {
         int x = i % width;
         int y = i / width;
         int tile = data[i] - 1; // Tiled偏移
         if (tile < 0) tile = 0;  
-
-        current.logicmap[y][x] = static_cast<uint8_t>(tile);
+        current.logicmap[y][x] = tile;
     }
 
     return true;
 }
+//加载瓦片集
+bool World::load_tileset(const std::string& filename)
+{
+    std::ifstream file(filename);
+    if (!file.is_open()) return false;
 
+    json j;
+    file >> j;
+    int columns = j["columns"];
+    int tilecount = j["tilecount"];
+    tiles.resize(tilecount);
+    for(int id=0 ; id < tilecount ; id++)
+    {
+        tiles[id].tile_rect.x = (id % columns) * TILE_SIZE;
+        tiles[id].tile_rect.y = (id / columns) * TILE_SIZE;
+        tiles[id].tile_rect.w = TILE_SIZE;
+        tiles[id].tile_rect.h = TILE_SIZE;
+    }
+    /*等价的for循环
+    auto& tile_s = j["tiles"];
+    for (int i = 0; i < tile_s.size(); i++)
+    {
+        auto& tile = tiles[i];
+    }
+    */
+    for (auto& tile : j["tiles"])
+    {
+        int id = tile["id"];
+        tiles[id].tile_ID = id;
+        
+        if (tile.contains("properties"))
+        {
+            for (auto& prop : tile["properties"])
+            {
+                std::string name = prop["name"];
+                if (name == "walkable")
+                {
+                    tiles[id].walkable = prop["value"];
+                }
+            }
+        }
+    }
+    return true;
+}
+/*
 bool World::load_tileset(const char* path)
 {
     XMLDocument doc;
@@ -61,8 +100,10 @@ bool World::load_tileset(const char* path)
 
     XMLElement* root = doc.FirstChildElement("tileset");
     //XMLElement* tex_rect = root->FirstChildElement("image");
+    if(root == nullptr) return false;
     int columns = root->IntAttribute("columns");
     int tilecount = root->IntAttribute("tilecount");
+    tiles.resize(tilecount);
     for (int id = 0; id < tilecount; id++)
     {
         tiles[id].tile_rect.x = (id % columns) * TILE_SIZE;
@@ -74,9 +115,10 @@ bool World::load_tileset(const char* path)
          tile != NULL;
          tile = tile->NextSiblingElement("tile"))
     {
+        if(tile == nullptr) return false;
         int id = tile->IntAttribute("id");
         XMLElement* props = tile->FirstChildElement("properties");
-        if (!props) continue;
+        if (!props) return false;
 
         for (XMLElement* prop = props->FirstChildElement("property");
              prop != NULL;
@@ -96,8 +138,9 @@ bool World::load_tileset(const char* path)
     }
     return true;
 }
+*/
 LogicTile World::get_tile(const uint8_t id)
 {
-    if (id >= tile_num) return tiles[0];//越界时
+    if (id >= tiles.size()) return tiles[0];//越界时
     return tiles[id];
 }

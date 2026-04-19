@@ -1,7 +1,7 @@
  C:\msys64\mingw64.exe 
  渲染是不断在双缓冲里更新图片，surface是个单缓冲不变的固定图片
  C:\Users\明耀寒玥\Desktop\SDL_game
- cd /c/Users/明耀寒玥/Desktop/SDL_game/sdl_game1
+ cd /e/SDL_Game/sdl_game1
  gcc main.c -o game $(pkg-config --cflags --libs sdl2 SDL2_image)
 ./game
 mingw32-make

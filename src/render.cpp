@@ -30,7 +30,7 @@ void Render_Init(Game *game,World *world,Player *player)
     //画布
     game->rect.w = game->window_w,game->rect.h = game->window_h;
     game->rect.x = 0 ,game->rect.y = 0 ;
-
+    TTF_Font *font;
     //ttf 傻逼
     font = TTF_OpenFont("asset/Huayuan Gothic.ttf", 24);
 
