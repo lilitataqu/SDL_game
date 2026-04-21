@@ -71,7 +71,7 @@ void Player::player_update(World *world,Tex_Manager *tex)
 
         if (nx >= 0 && nx < world->map->map_w &&
         ny >= 0 && ny < world->map->map_h &&
-        world->get_tile(world->map->logicmap[ny][nx]).walkable) {
+        world->get_tile(world->map->logic_map[ny][nx]).walkable) {
             this->moving = 1;
             
             // 记住开始移动坐标，开始移动
@@ -146,7 +146,7 @@ void Player::player_update(World *world,Tex_Manager *tex)
             this->moving = 0;
         }
     }
-    if (world->get_tile(world->map->logicmap[tile_y][tile_x]).exit_id == 1)
+    if (world->get_tile(world->map->logic_map[tile_y][tile_x]).exit_id == 1)
         {
             //找到传送点瓦片起始坐标
             int i = 0;
@@ -168,7 +168,7 @@ void Player::player_update(World *world,Tex_Manager *tex)
         }
             return;
         }
-        if(world->get_tile(world->map->logicmap[tile_y][tile_x]).event_id == battle)
+        if(world->get_tile(world->map->logic_map[tile_y][tile_x]).event_id == battle)
         {
             this->battle_state = true;
             tex->btl_bg[0].able = 1;

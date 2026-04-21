@@ -7,7 +7,7 @@ INC_DIR = include
 SDL_CFLAGS  = $(shell pkg-config --cflags sdl2 SDL2_image SDL2_ttf)
 SDL_LDFLAGS    = $(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf)
 
-CXXFLAGS = -Wall -O2 -std=c++17 -I$(INC_DIR) $(SDL_CFLAGS)
+CXXFLAGS = -Wall -O2 -std=c++20 -I$(INC_DIR) $(SDL_CFLAGS)
 CXXFLAGS += -Werror=return-type
 
 SRC = $(wildcard $(SRC_DIR)/*.cpp)

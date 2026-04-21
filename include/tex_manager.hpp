@@ -43,7 +43,7 @@ typedef struct
 class Tex_Manager
 {
 private:
-    std::vector<std::string> tiles_paths;
+    std::vector<std::string> tileset_png_paths;
     std::vector<std::string> bg_paths;
     std::vector<std::string> pokemon_paths;
     std::vector<std::string> ui_paths;

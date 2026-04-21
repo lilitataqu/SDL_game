@@ -59,13 +59,19 @@ void draw_map(Game *game,World *world,Player *player,Tex_Manager *tex)
     SDL_Rect dst;
     for (int row = start_row; row <= end_row; row++) {
         for (int col = start_col; col <= end_col; col++) {
-            LogicTile tile = world->get_tile(world->map->logicmap[row][col]);
-            
+            //渲染背景
+            LogicTile tile_bg = world->get_tile(world->map->map_bg[row][col]);
             dst.x = col * TILE_SIZE - world->camera.x;
             dst.y = row * TILE_SIZE - world->camera.y;
             dst.w = TILE_SIZE;
             dst.h = TILE_SIZE;
-            SDL_RenderCopy(game->rdr, tex->tiles, &tile.tile_rect, &dst);
+            SDL_RenderCopy(game->rdr, tex->tiles, &tile_bg.tile_rect, &dst);
+            //渲染中景
+            if(world->map->map_mg[row][col] < 0)
+            continue;
+            LogicTile tile_mg = world->get_tile(world->map->map_mg[row][col]);
+            //printf("%d ",tile_mg.tile_rect.x);
+            SDL_RenderCopy(game->rdr, tex->tiles, &tile_mg.tile_rect, &dst);
         }
     }
     /*
