@@ -51,7 +51,7 @@ public:
     TEX btl_bg[BATTLE_BG_NUM];
     TEX pokemon_tex[BATTLE_POKEMON_NUM];
     TEX ui[UI_NUM];
-    SDL_Texture *tiles;
+    std::vector<SDL_Texture*> tiles;
     SDL_Texture *player;
     Tex_Manager(SDL_Renderer* renderer);
     ~Tex_Manager();

@@ -17,8 +17,16 @@ void map_update(World *world,Player *player)
     player->move_frame_count = 0;
     player->moving = false;
 
-    //摄像机左上角在世界中的位置 摄像机大小 = 窗口大小
-    world->camera.x = 0 ,world->camera.y = 0,
+    // 根据玩家位置重新计算摄像机
+    world->camera.x = player->px - (world->camera.w - player->w) / 2;
+    world->camera.y = player->py - (world->camera.h - player->h) / 2;
+    // 钳位
+    if (world->camera.x < 0) world->camera.x = 0;
+    if (world->camera.y < 0) world->camera.y = 0;
+    if (world->camera.x > world->map->map_w * TILE_SIZE - world->camera.w)
+        world->camera.x = world->map->map_w * TILE_SIZE - world->camera.w;
+    if (world->camera.y > world->map->map_h * TILE_SIZE - world->camera.h)
+        world->camera.y = world->map->map_h * TILE_SIZE - world->camera.h;
     //人物渲染的起始坐标，和px一样
     player->hero_screen.x = player->px - world->camera.x;
     player->hero_screen.y = player->py - world->camera.y - TILE_SIZE;
@@ -141,11 +149,28 @@ void Player::player_update(World *world,Tex_Manager *tex)
             
             this->hero_screen.x = this->px - world->camera.x;
             this->hero_screen.y = this->py - world->camera.y - TILE_SIZE;
-            
+            //碰撞盒
+            collision_box.x = px ;
+            collision_box.y = py ;
             // 清空
             this->moving = 0;
+            //检测事件
+            for (auto& p : world->map->portals)
+            {   //矩形检测，并且有朝向要求
+                if (SDL_HasIntersection(&collision_box, &p.rect) && p.direction == facing)
+                {
+        
+                    tile_x = p.target_x;
+                    tile_y = p.target_y;
+                    world->map = world->maps[p.target_map].get();
+                    map_update(world,this);
+                    break;
+                }
+            }
         }
     }
+    
+    /*
     if (world->get_tile(world->map->logic_map[tile_y][tile_x]).exit_id == 1)
         {
             //找到传送点瓦片起始坐标
@@ -175,7 +200,7 @@ void Player::player_update(World *world,Tex_Manager *tex)
             tex->pokemon_tex[0].able = 1;
             tex->pokemon_tex[1].able = 1;
             tex->ui[0].able = 1;
-        }
+        }*/
     return ;
 }
 

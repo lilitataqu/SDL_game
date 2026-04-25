@@ -26,6 +26,9 @@ public:
    
     SDL_Rect hero_screen;
 
+    //碰撞体积
+    SDL_Rect collision_box;
+
     int facing;
 
     int move_frames;

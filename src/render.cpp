@@ -1,3 +1,4 @@
+#include <iostream>
 #include "world.hpp"
 #include "game.hpp"
 #include "input.hpp"
@@ -8,9 +9,6 @@
 void Render_Init(Game *game,World *world,Player *player)
 {
     
-
-    //出生的地图
-    world->map = &(world->maps[0][0]);
     //摄像机左上角在世界中的位置 摄像机大小 = 窗口大小
     world->camera.x = 0 ,world->camera.y = 0,
     world->camera.w = game->window_w,world->camera.h = game->window_h;
@@ -61,17 +59,18 @@ void draw_map(Game *game,World *world,Player *player,Tex_Manager *tex)
         for (int col = start_col; col <= end_col; col++) {
             //渲染背景
             LogicTile tile_bg = world->get_tile(world->map->map_bg[row][col]);
+            int i = tile_bg.tiles_id;
             dst.x = col * TILE_SIZE - world->camera.x;
             dst.y = row * TILE_SIZE - world->camera.y;
             dst.w = TILE_SIZE;
             dst.h = TILE_SIZE;
-            SDL_RenderCopy(game->rdr, tex->tiles, &tile_bg.tile_rect, &dst);
+            SDL_RenderCopy(game->rdr, tex->tiles[i], &tile_bg.tile_rect, &dst);
             //渲染中景
             if(world->map->map_mg[row][col] < 0)
             continue;
             LogicTile tile_mg = world->get_tile(world->map->map_mg[row][col]);
             //printf("%d ",tile_mg.tile_rect.x);
-            SDL_RenderCopy(game->rdr, tex->tiles, &tile_mg.tile_rect, &dst);
+            SDL_RenderCopy(game->rdr, tex->tiles[i], &tile_mg.tile_rect, &dst);
         }
     }
     /*
@@ -156,7 +155,7 @@ void draw(Game *game , Tex_Manager *tex,World *world,Player *player)
     if(player->battle_state == false)
     {
         player->player_update(world , tex);
-        draw_map(game,world,player,tex);  
+        draw_map(game,world,player,tex);
     }
     if(player->battle_state == true)
     {

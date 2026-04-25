@@ -1,22 +1,25 @@
 #ifndef WORLD_H
 #define WORLD_H
 #include <filesystem>
+#include <unordered_map>
 #include <cstdint>
 #include <vector>
 #include <string>
 #include <SDL2/SDL.h>
+//事件
 typedef enum {
     zero,
     battle,
     exit_map
 } Event;
-
+//瓦片属性
 typedef struct {
     bool walkable;
     uint8_t exit_id;
     Event event_id;
-    int tile_ID;
-    SDL_Rect tile_rect;
+    int tile_ID;//瓦片集里的id
+    int tiles_id;//瓦片集id
+    SDL_Rect tile_rect;//瓦片集里的位置
 } LogicTile;
 
 struct Tileset {
@@ -30,9 +33,10 @@ struct Tileset {
 
 
 typedef struct {
-    int from_x,from_y;
-    int map1,map2;
-    int to_x,to_y;
+    SDL_Rect rect;
+    std::string target_map;
+    int target_x,target_y;
+    int direction;//朝向
 } Portal;
 
 struct MapTileset  
@@ -46,7 +50,7 @@ typedef struct {
     std::vector<std::vector<int>> map_mg;
     std::vector<std::vector<int>> logic_map;
     int map_w, map_h;
-    Portal portals[10];
+    std::vector<Portal> portals;
     std::vector<MapTileset> maptilesets;
     std::vector<LogicTile*> gid_lookup; //根据gid得出tmj里的id
     std::vector<std::string> name;  //tsj路径
@@ -56,9 +60,10 @@ class World{
     private:
         std::vector<Tileset> tilesets;  //瓦片集
         std::vector<std::filesystem::path> tileset_tsj_paths;   //瓦片集路径
+        std::vector<std::filesystem::path> maps_tmj_paths; //地图路径
     public:
         Maps *map;
-        Maps maps[5][5];
+        std::unordered_map<std::string, std::unique_ptr<Maps>> maps;
         bool mapup;
         SDL_Rect camera;
         World();

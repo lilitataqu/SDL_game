@@ -32,7 +32,10 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
 
     //瓦片集
     tileset_png_paths = {
-        "asset/png/1_1.png"
+        "asset/png/内部1.png",
+        "asset/png/外部春天1.png"
+        
+        
     };
     //战斗背景
     bg_paths = {
@@ -49,10 +52,12 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
     };
 
     //渲染瓦片集
-    tiles = IMG_LoadTexture(renderer,tileset_png_paths[0].c_str());
-    if(tiles == nullptr)
-    {
-        printf("Texture load failed: %s\n", tileset_png_paths[0].c_str());
+    for(int i=0 ; i<tileset_png_paths.size();i++){
+        tiles.push_back(IMG_LoadTexture(renderer,tileset_png_paths[i].c_str()));
+        if(tiles[i] == nullptr)
+        {
+            printf("Texture load failed: %s\nSDL Error: %s\n", tileset_png_paths[0].c_str(), SDL_GetError());
+        }
     }
     //渲染战斗背景
     for(int i = 0; i < BATTLE_BG_NUM; i++)

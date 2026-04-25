@@ -24,5 +24,10 @@ Player::Player() {
     //人物在屏幕的大小
     this->hero_screen.w =  this->w;
     this->hero_screen.h =  this->h;
+
+    //碰撞盒
+    collision_box = {
+        px,py,w,h
+    };
 }
 Player::~Player() {}
