@@ -8,9 +8,11 @@
 #include "player.hpp"
 //struct World;
 //class Player;
-
-
-
+enum class State{
+    WALK,
+    UI,
+    BATTLE
+};
 
 
 typedef struct {
@@ -50,6 +52,8 @@ typedef struct {
     SDL_Renderer *rdr;
 
     SDL_Event event;
+
+    State state;
 
     Battle battle;
 

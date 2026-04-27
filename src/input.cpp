@@ -204,6 +204,8 @@ void Player::player_update(World *world,Tex_Manager *tex)
     return ;
 }
 
+
+
 void ui(Game *game)
 {
     while (SDL_PollEvent(&(game->event)))
@@ -211,15 +213,37 @@ void ui(Game *game)
             //相应菜单事件，如关闭游戏，打开设置
            switch (game->event.type)
             {
+            //键盘输入时
+            case SDL_KEYDOWN:
+                //esc
+                if (game->event.key.keysym.sym == SDLK_ESCAPE)
+                    {
+                        game->running = 0;
+                        break;
+                    }
+                //根据游戏状态做出选择
+                switch (game->state)
+                {
+                case State::WALK:
+                    // 键盘事件
+                    if(game->event.key.keysym.sym == SDLK_e ){
+                        game->state = State::UI;
+                        break;
+                    }
+                case State::UI:
+                    if(game->event.key.keysym.sym == SDLK_e){
+                        game->state = State::WALK;
+                        break;
+                    }
+                       
+                default:
+                    break;
+                }
+                break;
+            //点x关闭游戏
             case SDL_QUIT:
                 game->running = 0;
                 break;
-            case SDL_KEYDOWN:
-            // 添加ESC键退出功能
-            if (game->event.key.keysym.sym == SDLK_ESCAPE) {
-                game->running = 0;
-            }
-            break;
             case SDL_WINDOWEVENT:
                 if(game->event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {

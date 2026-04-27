@@ -87,7 +87,7 @@ int Game_Init(Game *game,World *world,Player *player)
     return -1;
     }
     world->mapup = false;
-
+    game->state = State::WALK;
     
     return 0;
 }

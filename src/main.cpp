@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
             break;
         }
         
-        //player_update(&game);
         
         draw(&game,&tex,&world,&player);
 

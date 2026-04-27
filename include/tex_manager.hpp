@@ -22,15 +22,21 @@ typedef enum
 
 typedef enum
 {
-    CLOTH,
+    MENU,
+    MENU_SELECT_BOX,
     UI_NUM
 }UI;
+
+struct KeyRepeat {
+    Uint32 lastTime = 0;
+    bool firstPress = true;
+};
 
 typedef struct
 {
     SDL_Texture *tex;
     SDL_Rect rect;
-    int able = 0;
+    bool able = false;
     int layer = 0;
 }TEX;
 /*
@@ -47,12 +53,14 @@ private:
     std::vector<std::string> bg_paths;
     std::vector<std::string> pokemon_paths;
     std::vector<std::string> ui_paths;
+    KeyRepeat menu_box;
 public:
     TEX btl_bg[BATTLE_BG_NUM];
     TEX pokemon_tex[BATTLE_POKEMON_NUM];
     TEX ui[UI_NUM];
     std::vector<SDL_Texture*> tiles;
     SDL_Texture *player;
+    void move_mens_box();
     Tex_Manager(SDL_Renderer* renderer);
     ~Tex_Manager();
 };

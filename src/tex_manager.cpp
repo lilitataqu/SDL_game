@@ -1,5 +1,6 @@
 #include <SDL2/SDL_image.h>
 #include "tex_manager.hpp"
+#include "config.hpp"
 
 Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
 {
@@ -48,7 +49,8 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
     };
     //ui
     ui_paths = {
-        "asset/cloth.png"
+        "asset/ui/menu.png",
+        "asset/ui/menu选中框.png"
     };
 
     //渲染瓦片集
@@ -79,15 +81,26 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
             printf("Texture load failed: %s\n", pokemon_paths[i].c_str());
         }
     }
-    //渲染战斗ui
+    //渲染ui
     for(int i = 0; i < UI_NUM; i++)
     {
-        ui[i].tex = IMG_LoadTexture(renderer, ui_paths[i].c_str());
-
+        SDL_Surface *face = IMG_Load(ui_paths[i].c_str());
+        if(face == nullptr)
+        {
+            printf("Texture load failed: %s\n", ui_paths[i].c_str());
+            continue;
+        }
+        ui[i].tex = SDL_CreateTextureFromSurface(renderer, face);
+        
         if(ui[i].tex ==  nullptr)
         {
             printf("Texture load failed: %s\n", ui_paths[i].c_str());
         }
+        //初始化
+        ui[i].rect.w = face->w;
+        ui[i].rect.h =face->h;
+        ui[i].able = true;
+        SDL_FreeSurface(face);
     }
     //初始化几个矩形
     pokemon_tex[0].rect.x = 32;
@@ -98,10 +111,55 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
     pokemon_tex[1].rect.y = 16;
     pokemon_tex[1].rect.w = 64;
     pokemon_tex[1].rect.h = 64;
-    ui[0].rect.x = 0;
-    ui[0].rect.y = 112;
-    ui[0].rect.w = 240;
-    ui[0].rect.h = 48;
+    ui[0].rect.x = 500;
+    ui[0].rect.y = 20;
+    ui[1].rect.x = ui[0].rect.x + 17;
+    ui[1].rect.y = ui[0].rect.y + 21;
+}
+
+void Tex_Manager::move_mens_box()
+{
+    const Uint8* keys = SDL_GetKeyboardState(NULL);
+    uint32_t now = SDL_GetTicks();
+    if(ui[MENU_SELECT_BOX].rect.y >= 79 + ui[0].rect.y && (keys[SDL_SCANCODE_UP ]|| keys[SDL_SCANCODE_W]))
+    {
+        if (menu_box.firstPress)
+        {
+            ui[1].rect.y -= 58;  // 第一次立即触发
+            menu_box.firstPress = false;
+            menu_box.lastTime = now;
+        } 
+        else
+        {
+            if (now - menu_box.lastTime > 200) {
+                ui[1].rect.y -= 58;
+                menu_box.lastTime = now - (80);
+            }
+        }
+        return;
+    }
+    else if (ui[MENU_SELECT_BOX].rect.y <= 21+58*5+ui[0].rect.y && (keys[SDL_SCANCODE_DOWN ]|| keys[SDL_SCANCODE_S]))
+    {
+        if (menu_box.firstPress)
+        {
+            ui[1].rect.y += 58;  // 第一次立即触发
+            menu_box.firstPress = false;
+            menu_box.lastTime = now;
+        } 
+        else
+        {
+            if (now - menu_box.lastTime > 200) {
+                ui[1].rect.y += 58;
+                menu_box.lastTime = now - (80);
+            }
+        }
+        return;
+    }
+    else{
+        menu_box.firstPress = true;
+    }
+    return;
+    
 }
 
 Tex_Manager::~Tex_Manager()
