@@ -24,6 +24,7 @@ typedef enum
 {
     MENU,
     MENU_SELECT_BOX,
+    MENU_POKEMON_BG,
     UI_NUM
 }UI;
 

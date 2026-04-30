@@ -29,7 +29,7 @@ void Render_Init(Game *game,World *world,Player *player)
     game->rect.w = game->window_w,game->rect.h = game->window_h;
     game->rect.x = 0 ,game->rect.y = 0 ;
     TTF_Font *font;
-    //ttf 傻逼
+    /*ttf 傻逼
     font = TTF_OpenFont("asset/Huayuan Gothic.ttf", 24);
 
     if(!font)
@@ -40,6 +40,7 @@ void Render_Init(Game *game,World *world,Player *player)
                                 font,
                                "河南",
                                 {255,255,255,255});
+    */
 }
 
 void draw_map(Game *game,World *world,Player *player,Tex_Manager *tex)
@@ -69,35 +70,11 @@ void draw_map(Game *game,World *world,Player *player,Tex_Manager *tex)
             if(world->map->map_mg[row][col] < 0)
             continue;
             LogicTile tile_mg = world->get_tile(world->map->map_mg[row][col]);
+            i = tile_mg.tiles_id;
             //printf("%d ",tile_mg.tile_rect.x);
             SDL_RenderCopy(game->rdr, tex->tiles[i], &tile_mg.tile_rect, &dst);
         }
     }
-    /*
-    SDL_Rect rect;
-    rect.x = ((world->camera.x)/32)*32;
-    rect.y = (world->camera.y/32)*32;
-    rect.w = TILE_SIZE;
-    rect.h = TILE_SIZE;
-    LogicTile tile;
-    // 渲染纹理（透明自动生效）,因为摄像头跟随有中间值，所以渲染比摄像头大点
-    for(int i= rect.x/32 ; i < (rect.x + game->window_w + 32)/32 ; i++)
-    {
-        for(int j=rect.y/32 ; j < (rect.y + game->window_h + 32)/32; j++)
-        {
-            tile = world->get_tile(world->map->logicmap[j][i]);
-            SDL_RenderCopy(
-                game->rdr,
-                tex->tiles , 
-                &(tile.tile_rect),
-                &(rect));
-            
-            rect.y += TILE_SIZE;
-        }
-        rect.x += TILE_SIZE;
-        rect.y = (world->camera.y/32)*32;
-    }
-    */
     SDL_RenderCopy(game->rdr, tex->player, NULL,&(player->hero_screen));
 
 }
@@ -151,23 +128,29 @@ void draw(Game *game , Tex_Manager *tex,World *world,Player *player)
     //切换渲染目标
     SDL_SetRenderTarget(game->rdr,game->canvas);
     //清空屏幕
-    SDL_RenderClear(game->rdr);
-    if(game->state == State::WALK)
+    SDL_RenderClear(game->rdr);/*
+    switch (game->state)
     {
+    case State::WALK:
         player->player_update(world , tex);
         draw_map(game,world,player,tex);
-    }
-    if(game->state == State::BATTLE)
-    {
-        draw_bg(game,tex);
-        draw_pokemon_btl(game,tex);
-    }
-    if(game->state == State::UI)
-    {
+        break;
+    case State::UI:
         draw_map(game,world,player,tex);
         tex->move_mens_box();
         draw_ui(game,tex);
-    }
+        break;
+    case State::BATTLE:
+        draw_bg(game,tex);
+        draw_pokemon_btl(game,tex);
+        break;
+    
+    default:
+        break;
+    }*/
+    draw_map(game,world,player,tex);
+    draw_pokemon_btl(game,tex);
+    draw_ui(game,tex);
     SDL_SetRenderTarget(game->rdr,NULL);
     //SDL_RenderClear(game->rdr);
     SDL_RenderCopy(game->rdr,game->canvas,NULL,&(game->rect));

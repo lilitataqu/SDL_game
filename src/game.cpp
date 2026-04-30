@@ -17,7 +17,7 @@ int Game_Init(Game *game,World *world,Player *player)
             SDL_GetError(),
             NULL
         );
-        return 0;
+        return -1;
     }
 
     

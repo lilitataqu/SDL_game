@@ -5,7 +5,7 @@
 Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
 {
     // 初始化 SDL2_image PNG 支持
-    IMG_Init(IMG_INIT_PNG);
+    //IMG_Init(IMG_INIT_PNG);
 
     //渲染主角
     SDL_Surface *player_face = IMG_Load("asset/hero.png");
@@ -36,7 +36,6 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
         "asset/png/内部1.png",
         "asset/png/外部春天1.png"
         
-        
     };
     //战斗背景
     bg_paths = {
@@ -50,7 +49,8 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
     //ui
     ui_paths = {
         "asset/ui/menu.png",
-        "asset/ui/menu选中框.png"
+        "asset/ui/menu选中框.png",
+        "asset/ui/menu_pokemon_bg.png"
     };
 
     //渲染瓦片集
@@ -115,6 +115,8 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
     ui[0].rect.y = 20;
     ui[1].rect.x = ui[0].rect.x + 17;
     ui[1].rect.y = ui[0].rect.y + 21;
+    ui[2].rect.x = 0 ,ui[2].rect.y = 0;
+    ui[2].able = false;
 }
 
 void Tex_Manager::move_mens_box()

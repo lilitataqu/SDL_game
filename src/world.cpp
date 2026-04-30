@@ -1,6 +1,6 @@
 #include <fstream>
 #include <iostream>
-#include <filesystem>
+//#include <filesystem>
 #include "json.hpp"
 using json = nlohmann::json;
 #include "world.hpp"
@@ -108,12 +108,14 @@ bool World::load_map(const std::string& filename){
         if(max_gid < _gid) max_gid = _gid;
         fid++;
     }
+    //printf("%d\n",max_gid);
     int a = map->maptilesets.size() - 1;//遍历maptilesets
     //申请空间
     map->gid_lookup.resize(max_gid);
     for(int i=max_gid ; i>=1 ; i--){
         int id = map->maptilesets[a].first_gid;
         if(i < id) a--;
+        if(a < 0) return false;
         map->gid_lookup[i-1] = &(map->maptilesets[a].ts->tiles[i - id]);
     }
     //初始化背景 中景 逻辑地图
@@ -135,6 +137,7 @@ bool World::load_map(const std::string& filename){
         //if (tile_mg < 0) tile_mg = 0;  
 
         map->map_mg[y][x] = tile_mg;
+        //默认中景瓦片大，优先中景再背景
         map->logic_map[y][x] = tile_mg > tile_bg ? tile_mg : tile_bg; 
     }
     maps[map_name] = std::move(map);

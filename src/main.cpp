@@ -1,11 +1,9 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <SDL2/SDL_image.h>
-#include "game.hpp"
 #include "render.hpp"
 #include "input.hpp"
 #include "tex_manager.hpp"
-#include "render.hpp"
 #include "config.hpp"
 int main(int argc, char *argv[])
 {
@@ -27,7 +25,8 @@ int main(int argc, char *argv[])
     //加载渲染纹理
     //TextureManager_Init(game.rdr,&tex);
     Tex_Manager tex(game.rdr);
-
+    //请开始你的堆栈，栈处理键盘输入
+    StateManager stateMgr;
     //帧数与间隔时间
     Uint32 frame_start = SDL_GetTicks();
     
@@ -35,16 +34,24 @@ int main(int argc, char *argv[])
     {
         //起始帧
         frame_start = SDL_GetTicks();
-
-        ui(&game);
+        //切换渲染目标
+        SDL_SetRenderTarget(game.rdr,game.canvas);
+        //清空屏幕
+        SDL_RenderClear(game.rdr);
+        
+        //先输入，画面更新
+        input(&game,&stateMgr,&tex,&world,&player);
 
          // 如果收到退出事件，立即跳出循环
         if (!game.running) {
             break;
         }
+        //渲染
+        SDL_SetRenderTarget(game.rdr,NULL);
+        SDL_RenderCopy(game.rdr,game.canvas,NULL,&(game.rect));
+        //渲染呈现
+        SDL_RenderPresent(game.rdr);
         
-        
-        draw(&game,&tex,&world,&player);
 
         //刷新屏幕，并等待一个帧
         Uint32 frame_cost = SDL_GetTicks() - frame_start;

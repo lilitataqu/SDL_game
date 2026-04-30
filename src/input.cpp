@@ -1,259 +1,121 @@
-#include "world.hpp"
-#include "game.hpp"
-#include "tex_manager.hpp"
-#include "player.hpp"
+//#include "world.hpp"
+//#include "game.hpp"
+//#include "tex_manager.hpp"
+#include "input.hpp"
+#include "render.hpp"
+//#include "player.hpp"
 #include "config.hpp"
-void map_update(World *world,Player *player)
+
+
+
+//********************************************************** */
+//构建状态虚类
+//输入默认空实现，具体由子类实现
+//纯虚函数不用写实现
+//******************************************************* */
+void GameState::handleInput(Tex_Manager *tex){}
+void GameState::player_move(Player *player,World *world,Tex_Manager *tex){}
+void GameState::render(Game*, Tex_Manager*, World*, Player*) {}
+//*************************************************************** */
+//这个类存放栈
+//栈的方法 
+//***************************************************************** */
+StateManager::StateManager()
 {
-     //小数，计算时用到的世界坐标
-    player->x = player->tile_x * TILE_SIZE;
-    player->y = player->tile_y * TILE_SIZE;
-    //int 屏幕坐标
-    player->px = player->tile_x * TILE_SIZE;
-    player->py =  player->tile_y * TILE_SIZE;
-    //帧坐标
-    player->start_x = player->x;
-    player->start_y = player->y;
-    player->move_frame_count = 0;
-    player->moving = false;
-
-    // 根据玩家位置重新计算摄像机
-    world->camera.x = player->px - (world->camera.w - player->w) / 2;
-    world->camera.y = player->py - (world->camera.h - player->h) / 2;
-    // 钳位
-    if (world->camera.x < 0) world->camera.x = 0;
-    if (world->camera.y < 0) world->camera.y = 0;
-    if (world->camera.x > world->map->map_w * TILE_SIZE - world->camera.w)
-        world->camera.x = world->map->map_w * TILE_SIZE - world->camera.w;
-    if (world->camera.y > world->map->map_h * TILE_SIZE - world->camera.h)
-        world->camera.y = world->map->map_h * TILE_SIZE - world->camera.h;
-    //人物渲染的起始坐标，和px一样
-    player->hero_screen.x = player->px - world->camera.x;
-    player->hero_screen.y = player->py - world->camera.y - TILE_SIZE;
-
-    player->moving = 0;
-    return ;
+    states.push(std::make_unique<WorldState>(this));
 }
-
-Direction get_dir_from_key(const Uint8* keys)
+//入栈
+void StateManager::push(std::unique_ptr<GameState> s) 
 {
-    if (keys[SDL_SCANCODE_UP ]|| keys[SDL_SCANCODE_W])    return DIR_UP;
-    if (keys[SDL_SCANCODE_DOWN ]|| keys[SDL_SCANCODE_S])  return DIR_DOWN;
-    if (keys[SDL_SCANCODE_LEFT ] || keys[SDL_SCANCODE_A])  return DIR_LEFT;
-    if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) return DIR_RIGHT;
-
-    return DIR_NONE;
+    states.push(std::move(s));
 }
-
-void dir_to_offset(Direction dir, int* dx, int* dy)
-{
-    *dx = 0;
-    *dy = 0;
-
-    switch (dir) {
-    case DIR_UP:    *dy = -1; break;
-    case DIR_DOWN:  *dy =  1; break;
-    case DIR_LEFT:  *dx = -1; break;
-    case DIR_RIGHT: *dx =  1; break;
-    default: break;
-    }
+//出栈
+void StateManager::pop() {
+    if (!states.empty()) states.pop();
 }
-
-
-void Player::player_update(World *world,Tex_Manager *tex)
+//获取栈顶元素
+GameState* StateManager::current() {
+    return states.empty() ? nullptr : states.top().get();
+}
+//************************************************************************************************** */
+//宝可梦界面
+//************************************************************************************************** */
+void PokemonState::handleInput(Tex_Manager *tex)
 {
-    const Uint8* keys = SDL_GetKeyboardState(NULL);
-    Direction dir = get_dir_from_key(keys);
-
-    // 永远允许更新朝向
-    if (dir != DIR_NONE)
-        this->facing = dir;
-
-    // 只有不在移动中，才尝试移动
-    if (!this->moving && dir != DIR_NONE) {
-        int dx, dy;
-        dir_to_offset(dir, &dx, &dy);
-
-        int nx = this->tile_x + dx;
-        int ny = this->tile_y + dy;
-
-        if (nx >= 0 && nx < world->map->map_w &&
-        ny >= 0 && ny < world->map->map_h &&
-        world->get_tile(world->map->logic_map[ny][nx]).walkable) {
-            this->moving = 1;
-            
-            // 记住开始移动坐标，开始移动
-            this->start_x = this->x;
-            this->start_y = this->y;
-            
-            // 第0帧
-            this->move_frame_count = 0;
-
-            this->tile_x = nx;
-            this->tile_y = ny;
-
-            this->px = nx * TILE_SIZE;
-            this->py = ny * TILE_SIZE;
-        }
-    }
-
-    // 如果正在移动，执行插值
-    if (this->moving) 
-    {
-        // 第一帧
-        this->move_frame_count++;
-        
-        // 8帧间的差距
-        float progress = (float)this->move_frame_count / (float)this->move_frames;
-        
-        
-        this->x = this->start_x + (this->px - this->start_x) * progress;
-        this->y = this->start_y + (this->py - this->start_y) * progress;
-        // 摄像头跟随
-        world->camera.x = (int)(this->x - (world->camera.w - this->w)/2);
-        world->camera.y = (int)(this->y - (world->camera.h - this->h)/2);
-        
-        // 摄像头范围
-        if (world->camera.x < 0)
-            world->camera.x = 0;
-        if (world->camera.x > world->map->map_w*TILE_SIZE - world->camera.w)
-            world->camera.x = world->map->map_w*TILE_SIZE - world->camera.w;
-        if (world->camera.y < 0)
-            world->camera.y = 0;
-        if (world->camera.y > world->map->map_h*TILE_SIZE - world->camera.h)
-            world->camera.y = world->map->map_h*TILE_SIZE - world->camera.h;
-
-        // Update hero screen position for rendering
-        this->hero_screen.x = (int)(this->x - world->camera.x);
-        this->hero_screen.y = (int)(this->y - world->camera.y) - TILE_SIZE;
-        // Check if movement is complete
-        if (this->move_frame_count >= this->move_frames)
-        {
-            // 将屏幕坐标更新到世界坐标
-            this->x = this->px;
-            this->y = this->py;
-            
-            
-            // 移动摄像头
-            world->camera.x = (this->px - (world->camera.w - this->w)/2);
-            world->camera.y = (this->py - (world->camera.h - this->h)/2);
-            
-            if (world->camera.x < 0)
-                world->camera.x = 0;
-            if (world->camera.x > world->map->map_w*TILE_SIZE - world->camera.w)
-                world->camera.x = world->map->map_w*TILE_SIZE - world->camera.w;
-            if (world->camera.y < 0)
-                world->camera.y = 0;
-            if (world->camera.y > world->map->map_h*TILE_SIZE - world->camera.h)
-                world->camera.y = world->map->map_h*TILE_SIZE - world->camera.h;
-            
-            this->hero_screen.x = this->px - world->camera.x;
-            this->hero_screen.y = this->py - world->camera.y - TILE_SIZE;
-            //碰撞盒
-            collision_box.x = px ;
-            collision_box.y = py ;
-            // 清空
-            this->moving = 0;
-            //检测事件
-            for (auto& p : world->map->portals)
-            {   //矩形检测，并且有朝向要求
-                if (SDL_HasIntersection(&collision_box, &p.rect) && p.direction == facing)
-                {
-        
-                    tile_x = p.target_x;
-                    tile_y = p.target_y;
-                    world->map = world->maps[p.target_map].get();
-                    map_update(world,this);
-                    break;
-                }
-            }
-        }
-    }
     
-    /*
-    if (world->get_tile(world->map->logic_map[tile_y][tile_x]).exit_id == 1)
-        {
-            //找到传送点瓦片起始坐标
-            int i = 0;
-            while (!(this->tile_x != world->map->portals[i].from_x &&
-                   this->tile_y != world->map->portals[i].from_y) && i <= 10 )
-            {
-               i++;
-            }
-            
-            world->mapup = true;
-            if (world->mapup == true)
-        {
-            //更新英雄瓦片坐标再更新地图
-            this->tile_x = world->map->portals[i].to_x;  // 起始瓦片位置
-            this->tile_y = world->map->portals[i].to_y;
-            world->map = &(world->maps[world->map->portals[i].map1][world->map->portals[i].map2]);
-            map_update(world,this);
-            world->mapup = false;
-        }
-            return;
-        }
-        if(world->get_tile(world->map->logic_map[tile_y][tile_x]).event_id == battle)
-        {
-            this->battle_state = true;
-            tex->btl_bg[0].able = 1;
-            tex->pokemon_tex[0].able = 1;
-            tex->pokemon_tex[1].able = 1;
-            tex->ui[0].able = 1;
-        }*/
-    return ;
 }
-
-
-
-void ui(Game *game)
+//************************************************************************************************** */
+//菜单界面
+//************************************************************************************************** */
+void MenuState::handleEvent(SDL_Event& e,Tex_Manager *tex)
 {
-    while (SDL_PollEvent(&(game->event)))
+    if(e.key.keysym.sym == SDLK_e || e.key.keysym.sym == SDLK_x)
+    mgr->pop();
+}
+void MenuState::handleInput(Tex_Manager *tex)
+{
+     tex->move_mens_box();
+}
+void MenuState::render(Game* game, Tex_Manager* tex, World* world, Player* player)
+{
+    draw_map(game,world,player,tex);
+    draw_ui(game,tex);
+}
+//**************************************************************************************** */
+//世界界面
+//************************************************************************************************* */
+void WorldState::handleEvent(SDL_Event& e,Tex_Manager *tex)
+{
+    if(e.key.keysym.sym == SDLK_e)
+    mgr->push(std::make_unique<MenuState>(mgr));
+}
+void WorldState::player_move(Player *player,World *world,Tex_Manager *tex)
+{
+    player->player_update(world,tex);
+}
+void WorldState::render(Game* game, Tex_Manager* tex, World* world, Player* player)
+{
+    draw_map(game,world,player,tex);
+}
+void input(Game *game,StateManager *state,Tex_Manager *tex,World *world,Player *player)
+{
+    SDL_Event event;
+    while (SDL_PollEvent(&(event))) 
         {
             //相应菜单事件，如关闭游戏，打开设置
-           switch (game->event.type)
+           switch (event.type)
             {
             //键盘输入时
             case SDL_KEYDOWN:
+                if(state->current())
+                state->current()->handleEvent(event,tex);
                 //esc
-                if (game->event.key.keysym.sym == SDLK_ESCAPE)
+                if (event.key.keysym.sym == SDLK_ESCAPE)
                     {
                         game->running = 0;
-                        break;
                     }
-                //根据游戏状态做出选择
-                switch (game->state)
-                {
-                case State::WALK:
-                    // 键盘事件
-                    if(game->event.key.keysym.sym == SDLK_e ){
-                        game->state = State::UI;
-                        break;
-                    }
-                case State::UI:
-                    if(game->event.key.keysym.sym == SDLK_e){
-                        game->state = State::WALK;
-                        break;
-                    }
-                       
-                default:
-                    break;
-                }
-                break;
+                break;   
             //点x关闭游戏
             case SDL_QUIT:
                 game->running = 0;
                 break;
             case SDL_WINDOWEVENT:
-                if(game->event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                if(event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
-                    float scale = fmin(game->event.window.data1 / (game->window_w * 1.0f),game->event.window.data2 / (game->window_h * 1.0f));
+                    float scale = fmin(event.window.data1 / (game->window_w * 1.0f),event.window.data2 / (game->window_h * 1.0f));
                     game->rect.w = scale * game->window_w ,game->rect.h = scale * game->window_h ;
-                    game->rect.x = (game->event.window.data1 - game->rect.w) / 2;
-                    game->rect.y = (game->event.window.data2 - game->rect.h) / 2;
+                    game->rect.x = (event.window.data1 - game->rect.w) / 2;
+                    game->rect.y = (event.window.data2 - game->rect.h) / 2;
                 }
             default:
                 break;
             }
-        } 
+            
+        }
+    if(state->current())
+    state->current()->handleInput(tex);
+    if(state->current())
+    state->current()->player_move(player,world,tex);
+    if(state->current())
+    state->current()->render(game,tex,world,player);
 }

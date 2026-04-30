@@ -4,10 +4,8 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "world.hpp"
-#include "player.hpp"
-//struct World;
-//class Player;
+class World;
+class Player;
 enum class State{
     WALK,
     UI,
@@ -47,30 +45,33 @@ typedef struct {
     BattleState state;
 } Battle;
 
-typedef struct {
-    SDL_Window   *window;
-    SDL_Renderer *rdr;
 
-    SDL_Event event;
+class Game
+{
+    public:
+        SDL_Window   *window;
+        SDL_Renderer *rdr;
 
-    State state;
+        SDL_Event event;
 
-    Battle battle;
+        State state;
 
-    SDL_Texture *canvas;
+        Battle battle;
 
-    SDL_Rect rect;
-    
-    
-    int window_w;
-    int window_h;
+        SDL_Texture *canvas;
 
-    int running ;
+        SDL_Rect rect;
+        
+        
+        int window_w;
+        int window_h;
 
-    int view_x,view_y;
-    SDL_Texture *sid;
-} Game;
+        int running ;
 
+        int view_x,view_y;
+        SDL_Texture *sid;
+
+};
 
 int Game_Init(Game *game,World *world,Player *player);
 void Game_Quit(Game *game,World *world,Player *player);
