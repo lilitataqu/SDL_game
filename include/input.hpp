@@ -6,6 +6,23 @@
 #include "world.hpp"
 #include "player.hpp"
 #include "tex_manager.hpp"
+/****************************************************************** */
+//一些游戏状态下，接下来可能的游戏状态枚举
+/******************************************************************** */
+//菜单
+enum class MenuOption {
+    BAG,         //背包
+    POKEMON,    //宝可梦
+    TRAINER,    //训练家
+    SETTING,    //设置
+    RECORD,     //记录
+    SAVE,       //保存
+    EXIT        //退出
+};
+
+/******************************************************************* */
+//游戏状态类，这是父类，子类通过调用父类方法
+/******************************************************************** */
 
 class GameState {
 public:
@@ -16,9 +33,13 @@ public:
 
     virtual ~GameState() = default;
 };
-
+/********************************************************************************************* */
+//状态管理器
+/********************************************************************************************* */
 class StateManager {
 private:
+    
+
     std::stack<std::unique_ptr<GameState>> states;
 public:
     StateManager();
@@ -27,8 +48,13 @@ public:
     void pop();
     //获取栈顶元素
     GameState* current();
-};
 
+    //一些状态需要记录光标位置
+    int menuCursor = 0;
+};
+/********************************************************************************************* */
+//具体的状态类
+/********************************************************************************************* */
 class PokemonState : public GameState {
 private:
     StateManager* mgr;
@@ -37,14 +63,23 @@ private:
 public:
     PokemonState(StateManager* m) : mgr(m) {}
 
-    void handleInput(Tex_Manager *tex) override ;
+    void handleEvent(SDL_Event& e,Tex_Manager *tex) override ;
+    void render(Game*, Tex_Manager*, World*, Player*) override;
 };
 
 //菜单状态
 class MenuState : public GameState {
 private:
     StateManager* mgr;
-    int cursor = 0;
+    std::vector<MenuOption> options = {
+    MenuOption::BAG,         //背包
+    MenuOption::POKEMON,    //宝可梦
+    MenuOption::TRAINER,    //训练家
+    MenuOption::SETTING,    //设置
+    MenuOption::RECORD,     //记录
+    MenuOption::SAVE,       //保存
+    MenuOption::EXIT        //退出
+    };  //选择的状态
 
 public:
     MenuState(StateManager* m) : mgr(m) {}

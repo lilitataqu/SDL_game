@@ -1,0 +1,14 @@
+{ "columns":4,
+ "image":"trchar000.png",
+ "imageheight":272,
+ "imagewidth":256,
+ "margin":0,
+ "name":"trchar000",
+ "spacing":0,
+ "tilecount":16,
+ "tiledversion":"1.12.1",
+ "tileheight":68,
+ "tilewidth":64,
+ "type":"tileset",
+ "version":"1.10"
+}

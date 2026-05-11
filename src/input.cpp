@@ -12,6 +12,7 @@
 //构建状态虚类
 //输入默认空实现，具体由子类实现
 //纯虚函数不用写实现
+//写成虚类，可以让子类方法重写
 //******************************************************* */
 void GameState::handleInput(Tex_Manager *tex){}
 void GameState::player_move(Player *player,World *world,Tex_Manager *tex){}
@@ -40,21 +41,90 @@ GameState* StateManager::current() {
 //************************************************************************************************** */
 //宝可梦界面
 //************************************************************************************************** */
-void PokemonState::handleInput(Tex_Manager *tex)
+void PokemonState::handleEvent(SDL_Event& e,Tex_Manager *tex)
 {
-    
+    if(e.key.keysym.sym == SDLK_g)
+    {
+        tex->ui[MENU].able = true;
+        tex->ui[MENU_SELECT_BOX].able = true;
+        tex->ui[MENU_POKEMON_BG].able = false;
+        tex->ui[MENU_POKEMON_BG_BOX].able = false;
+        mgr->pop();
+    }
+}
+void PokemonState::render(Game*game, Tex_Manager* tex, World* world, Player* player)
+{
+    draw_ui(game,tex);
 }
 //************************************************************************************************** */
 //菜单界面
 //************************************************************************************************** */
 void MenuState::handleEvent(SDL_Event& e,Tex_Manager *tex)
 {
-    if(e.key.keysym.sym == SDLK_e || e.key.keysym.sym == SDLK_x)
+    if(e.key.keysym.sym == SDLK_e || e.key.keysym.sym == SDLK_g)
     mgr->pop();
+    if(e.key.keysym.sym == SDLK_f)
+    switch (options[mgr->menuCursor])
+    {
+    case MenuOption::POKEMON:
+        tex->ui[MENU].able = false;
+        tex->ui[MENU_SELECT_BOX].able = false;
+        tex->ui[MENU_POKEMON_BG].able = true;
+        tex->ui[MENU_POKEMON_BG_BOX].able = true;
+        mgr->push(std::make_unique<PokemonState>(mgr));
+        break;
+    
+    default:
+        break;
+    }
 }
 void MenuState::handleInput(Tex_Manager *tex)
 {
-     tex->move_mens_box();
+    //tex->move_mens_box();
+    const Uint8* keys = SDL_GetKeyboardState(NULL);
+    uint32_t now = SDL_GetTicks();
+    if(tex->ui[MENU_SELECT_BOX].rect.y >= 79 + tex->ui[0].rect.y && (keys[SDL_SCANCODE_UP ]|| keys[SDL_SCANCODE_W]))
+    {
+        if (tex->menu_box.firstPress)
+        {
+            tex->ui[1].rect.y -= 58;  // 第一次立即触发
+            mgr->menuCursor -= 1;
+            tex->menu_box.firstPress = false;
+            tex->menu_box.lastTime = now;
+        } 
+        else
+        {
+            if (now - tex->menu_box.lastTime > 200) {
+                tex->ui[1].rect.y -= 58;
+                mgr->menuCursor -= 1;
+                tex->menu_box.lastTime = now - (80);
+            }
+        }
+        return;
+    }
+    else if (tex->ui[MENU_SELECT_BOX].rect.y <= 21+58*5+tex->ui[0].rect.y && (keys[SDL_SCANCODE_DOWN ]|| keys[SDL_SCANCODE_S]))
+    {
+        if (tex->menu_box.firstPress)
+        {
+            tex->ui[1].rect.y += 58;  // 第一次立即触发
+            mgr->menuCursor += 1;
+            tex->menu_box.firstPress = false;
+            tex->menu_box.lastTime = now;
+        } 
+        else
+        {
+            if (now - tex->menu_box.lastTime > 200) {
+                tex->ui[1].rect.y += 58;
+                mgr->menuCursor += 1;
+                tex->menu_box.lastTime = now - (80);
+            }
+        }
+        return;
+    }
+    else{
+        tex->menu_box.firstPress = true;
+    }
+    return;
 }
 void MenuState::render(Game* game, Tex_Manager* tex, World* world, Player* player)
 {
@@ -77,12 +147,16 @@ void WorldState::render(Game* game, Tex_Manager* tex, World* world, Player* play
 {
     draw_map(game,world,player,tex);
 }
+
+/********************************************************* */
+//处理键盘输入函数
+/********************************************************* */
 void input(Game *game,StateManager *state,Tex_Manager *tex,World *world,Player *player)
 {
     SDL_Event event;
     while (SDL_PollEvent(&(event))) 
         {
-            //相应菜单事件，如关闭游戏，打开设置
+            //判断事件类型 响应菜单事件，如关闭游戏，打开设置
            switch (event.type)
             {
             //键盘输入时

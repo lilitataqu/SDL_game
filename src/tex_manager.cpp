@@ -8,7 +8,7 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
     //IMG_Init(IMG_INIT_PNG);
 
     //渲染主角
-    SDL_Surface *player_face = IMG_Load("asset/hero.png");
+    SDL_Surface *player_face = IMG_Load("asset/png/trchar000.png");
 
     if (player_face== NULL)            
     {
@@ -50,7 +50,8 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
     ui_paths = {
         "asset/ui/menu.png",
         "asset/ui/menu选中框.png",
-        "asset/ui/menu_pokemon_bg.png"
+        "asset/ui/menu_pokemon_bg.png",
+        "asset/ui/menu_pokemon_bg_box.png"
     };
 
     //渲染瓦片集
@@ -117,6 +118,8 @@ Tex_Manager::Tex_Manager(SDL_Renderer* renderer)
     ui[1].rect.y = ui[0].rect.y + 21;
     ui[2].rect.x = 0 ,ui[2].rect.y = 0;
     ui[2].able = false;
+    ui[3].rect.x = 7, ui[3].rect.y = 96;
+    ui[3].able = false;
 }
 
 void Tex_Manager::move_mens_box()
@@ -162,6 +165,50 @@ void Tex_Manager::move_mens_box()
     }
     return;
     
+}
+
+void Tex_Manager::move_mens_pokemon_box()
+{
+    const Uint8* keys = SDL_GetKeyboardState(NULL);
+    uint32_t now = SDL_GetTicks();
+    if(ui[3].rect.y >= 124 + ui[3].rect.y && (keys[SDL_SCANCODE_UP ]|| keys[SDL_SCANCODE_W]))
+    {
+        if (menu_box.firstPress)
+        {
+            ui[3].rect.y -= 124;  // 第一次立即触发
+            menu_box.firstPress = false;
+            menu_box.lastTime = now;
+        } 
+        else
+        {
+            if (now - menu_box.lastTime > 200) {
+                ui[1].rect.y -= 124;
+                menu_box.lastTime = now - (80);
+            }
+        }
+        return;
+    }
+    else if (ui[3].rect.y <= 124*3+ui[3].rect.y && (keys[SDL_SCANCODE_DOWN ]|| keys[SDL_SCANCODE_S]))
+    {
+        if (menu_box.firstPress)
+        {
+            ui[3].rect.y += 124;  // 第一次立即触发
+            menu_box.firstPress = false;
+            menu_box.lastTime = now;
+        } 
+        else
+        {
+            if (now - menu_box.lastTime > 200) {
+                ui[3].rect.y += 124;
+                menu_box.lastTime = now - (80);
+            }
+        }
+        return;
+    }
+    else{
+        menu_box.firstPress = true;
+    }
+    return;
 }
 
 Tex_Manager::~Tex_Manager()

@@ -10,6 +10,7 @@ int Game_Init(Game *game,World *world,Player *player)
 {
     //全部值0或空
     memset(game, 0, sizeof(Game));
+    //初始化SDL，不然无法使用SDL库函数
      if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR,
@@ -20,11 +21,11 @@ int Game_Init(Game *game,World *world,Player *player)
         return -1;
     }
 
-    
+    //游戏窗口大小
     game->window_w = WINDOW_W;
     game->window_h = WINDOW_H;
     game->running = 1;
-   
+   //第一个字符串表示游戏运行的名字
     game->window = SDL_CreateWindow(
             "存在与虚无",
             SDL_WINDOWPOS_CENTERED,
@@ -35,7 +36,7 @@ int Game_Init(Game *game,World *world,Player *player)
             
         );//flags是标志数 创建窗口
 
-        //创建窗口是否失败
+    //创建窗口是否失败
     if (game->window == NULL)            
     {
         printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
@@ -58,13 +59,13 @@ int Game_Init(Game *game,World *world,Player *player)
     //清除屏幕
     SDL_RenderClear(game->rdr);
 
-    //初始化ttf
+    //初始化ttf，字体
     if(TTF_Init() == -1)
     {
         printf("TTF_Init Error: %s\n", TTF_GetError());
     }
 
-    //创建画布
+    //创建画布，用于窗口放大与缩小
     game->canvas = SDL_CreateTexture(
         game->rdr,
         SDL_PIXELFORMAT_RGBA8888,
@@ -76,7 +77,7 @@ int Game_Init(Game *game,World *world,Player *player)
         printf("SetRenderTarget error: %s\n", SDL_GetError());
     }
       
-    //请输入文本
+    //初始化SDL的IMG
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
     SDL_ShowSimpleMessageBox(
         SDL_MESSAGEBOX_ERROR,
@@ -91,7 +92,7 @@ int Game_Init(Game *game,World *world,Player *player)
     
     return 0;
 }
-
+//销毁，释放占用的内存资源
 void Game_Quit(Game *game,World *world,Player *player)
 {
     /*

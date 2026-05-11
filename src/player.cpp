@@ -4,31 +4,35 @@
 Player::Player() {
     // 初始化英雄位置和属性
     this->w = 32;
-    this->h = 64;
+    this->h = 32;
     this->tile_x = 12;  // 起始瓦片位置
     this->tile_y = 9;
-     //小数，计算时用到的世界坐标
+    //小数，计算时用到的世界坐标
     this->x = this->tile_x * TILE_SIZE;
     this->y = this->tile_y * TILE_SIZE;
     //int 屏幕坐标
     this->px = this->tile_x * TILE_SIZE;
     this->py =  this->tile_y * TILE_SIZE;
-    //帧坐标
+    //当移动开始时，记录的起始坐标
     this->start_x = this->x;
     this->start_y = this->y;
-
+    //8帧一个瓦片移动
     this->move_frames = MOVE_FRAMES;
     this->move_frame_count = 0;
+    this->move_tile_count = 0 ;
     this->moving = false;
     this->facing = DIR_DOWN;
 
+    //渲染的矩形
+    player_rect.x = 0 ,player_rect.y = 0 ,player_rect.w = TILE_SIZE*2 , player_rect.h = 68;
+
     //人物在屏幕的大小
-    this->hero_screen.w =  this->w;
-    this->hero_screen.h =  this->h;
+    this->hero_screen.w =  64;
+    this->hero_screen.h =  68;
 
     //碰撞盒
     collision_box = {
-        px,py,w,h
+        px,py,TILE_SIZE*2,TILE_SIZE*2
     };
 }
 
@@ -59,7 +63,7 @@ void map_update(World *world,Player *player)
         world->camera.y = world->map->map_h * TILE_SIZE - world->camera.h;
     //人物渲染的起始坐标，和px一样
     player->hero_screen.x = player->px - world->camera.x;
-    player->hero_screen.y = player->py - world->camera.y - TILE_SIZE;
+    player->hero_screen.y = player->py - world->camera.y;
     player->collision_box.x = player->px;
     player->collision_box.y = player->py;
     return ;
@@ -75,16 +79,18 @@ Direction get_dir_from_key(const Uint8* keys)
     return DIR_NONE;
 }
 
-void dir_to_offset(Direction dir, int* dx, int* dy)
+void dir_to_offset(Direction dir, int* dx, int* dy ,int* dx2, int* dy2)
 {
     *dx = 0;
     *dy = 0;
+    *dx2 = 0;
+    *dy2 = 0;
 
     switch (dir) {
-    case DIR_UP:    *dy = -1; break;
-    case DIR_DOWN:  *dy =  1; break;
-    case DIR_LEFT:  *dx = -1; break;
-    case DIR_RIGHT: *dx =  1; break;
+    case DIR_UP:    *dy = -1; *dy2 = -1; *dx2 = 1; break;
+    case DIR_DOWN:  *dy =  2; *dy2 = 2; * dx2 = 1; break;
+    case DIR_LEFT:  *dx = -1; *dx2 = -1; *dy2 = 1; break;
+    case DIR_RIGHT: *dx =  2; *dx2 = 2; *dy2 = 1; break;
     default: break;
     }
 }
@@ -97,25 +103,37 @@ void Player::player_update(World *world,Tex_Manager *tex)
 
     // 永远允许更新朝向
     if (dir != DIR_NONE)
+    {
         this->facing = dir;
-
+        player_rect.y = dir * 68;
+    }
+    else
+    {
+        player_rect.x = 0;
+        move_tile_count = 0;
+    }
+        
     // 只有不在移动中，才尝试移动
     if (!this->moving && dir != DIR_NONE) {
-        int dx, dy;
-        dir_to_offset(dir, &dx, &dy);
+        int dx, dy,dx2,dy2;
+        dir_to_offset(dir, &dx, &dy,&dx2,&dy2);
 
         int nx = this->tile_x + dx;
         int ny = this->tile_y + dy;
+        int nx2 = this->tile_x + dx2;
+        int ny2 = this->tile_y + dy2;
 
         if (nx >= 0 && nx < world->map->map_w &&
         ny >= 0 && ny < world->map->map_h &&
-        world->get_tile(world->map->logic_map[ny][nx]).walkable) {
+        world->get_tile(world->map->logic_map[ny][nx]).walkable &&
+        world->get_tile(world->map->logic_map[ny2][nx2]).walkable) {
             this->moving = 1;
             
             // 记住开始移动坐标，开始移动
             this->start_x = this->x;
             this->start_y = this->y;
-            
+            if(dx == 2) nx -= 1;
+            if(dy == 2) ny -= 1;
             // 第0帧
             this->move_frame_count = 0;
 
@@ -124,6 +142,7 @@ void Player::player_update(World *world,Tex_Manager *tex)
 
             this->px = nx * TILE_SIZE;
             this->py = ny * TILE_SIZE;
+
         }
     }
 
@@ -132,7 +151,6 @@ void Player::player_update(World *world,Tex_Manager *tex)
     {
         // 第一帧
         this->move_frame_count++;
-        
         // 8帧间的差距
         float progress = (float)this->move_frame_count / (float)this->move_frames;
         
@@ -153,10 +171,16 @@ void Player::player_update(World *world,Tex_Manager *tex)
         if (world->camera.y > world->map->map_h*TILE_SIZE - world->camera.h)
             world->camera.y = world->map->map_h*TILE_SIZE - world->camera.h;
 
-        // Update hero screen position for rendering
+        // 更新屏幕坐标
         this->hero_screen.x = (int)(this->x - world->camera.x);
-        this->hero_screen.y = (int)(this->y - world->camera.y) - TILE_SIZE;
-        // Check if movement is complete
+        this->hero_screen.y = (int)(this->y - world->camera.y);
+        if(move_frame_count%4 == 2){
+            if(++this->move_tile_count == 4) this->move_tile_count = 0;
+            this->player_rect.x = move_tile_count * TILE_SIZE * 2 ;
+        }
+        
+
+        // 8帧是否完成
         if (this->move_frame_count >= this->move_frames)
         {
             // 将屏幕坐标更新到世界坐标
@@ -178,12 +202,13 @@ void Player::player_update(World *world,Tex_Manager *tex)
                 world->camera.y = world->map->map_h*TILE_SIZE - world->camera.h;
             
             this->hero_screen.x = this->px - world->camera.x;
-            this->hero_screen.y = this->py - world->camera.y - TILE_SIZE;
+            this->hero_screen.y = this->py - world->camera.y;
             //碰撞盒
             collision_box.x = px ;
             collision_box.y = py ;
             // 清空
             this->moving = 0;
+            
             //检测事件
             for (auto& p : world->map->portals)
             {   //矩形检测，并且有朝向要求

@@ -9,18 +9,22 @@ using namespace tinyxml2;
 #include "config.hpp"
 World::World()
 {
+    //瓦片集路径
     tileset_tsj_paths = {
         "asset/png/内部1.tsj",
         "asset/png/外部春天1.tsj"
         
     };
+    //地图路径
     maps_tmj_paths = {
         "asset/maps/test.tmj",
-        "asset/maps/test1.tmj"
+        "asset/maps/test1.tmj",
+        "asset/maps/test2.tmj"
     };
     int i=0;
     //这里写多少个瓦片集
     tilesets.resize(3);
+    //遍历瓦片集，初始化并判断是否出错
     for (const auto& p : tileset_tsj_paths)
     {
         if(!(load_tileset(p,i)))
@@ -43,13 +47,16 @@ World::World()
 }
 }
 bool World::load_map(const std::string& filename){
+    //路径类型转换，由string到ifstream
     std::ifstream file(filename);
+    //是否可读
     if (!file.is_open()) return false;
     //转换一下,算出地图名字
     std::filesystem::path tmj(filename);
     std::string map_name = tmj.stem().string();
     auto map = std::make_unique<Maps>();
     json j;
+    //重载，读进json
     file >> j;
 
     int width  = j["width"];
@@ -79,10 +86,7 @@ bool World::load_map(const std::string& filename){
             direction
         });
     }
-    
-
-    //Maps& current = maps[0][0];
-    //寻找最大gid
+    //寻找最大gid，地图中出现的最大瓦片id
     int max_gid = 0; 
     //遍历tilesets
     int fid = 0;
@@ -108,9 +112,9 @@ bool World::load_map(const std::string& filename){
         if(max_gid < _gid) max_gid = _gid;
         fid++;
     }
-    //printf("%d\n",max_gid);
+    
     int a = map->maptilesets.size() - 1;//遍历maptilesets
-    //申请空间
+    //申请空间，建立个哈希表，gid_lookup里存瓦片的地址
     map->gid_lookup.resize(max_gid);
     for(int i=max_gid ; i>=1 ; i--){
         int id = map->maptilesets[a].first_gid;
@@ -132,7 +136,7 @@ bool World::load_map(const std::string& filename){
         int tile_bg = data_bg[i] - 1; // Tiled偏移
         if (tile_bg < 0) tile_bg = 0;  
         map->map_bg[y][x] = tile_bg;
-        //中景 data数组为0，表示此地无银300两
+        //中景 data数组为0，表示此地无银300两，没有瓦片，空白
         int tile_mg = data_mg[i] - 1; // Tiled偏移
         //if (tile_mg < 0) tile_mg = 0;  
 

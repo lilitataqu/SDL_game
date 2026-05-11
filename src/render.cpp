@@ -75,7 +75,7 @@ void draw_map(Game *game,World *world,Player *player,Tex_Manager *tex)
             SDL_RenderCopy(game->rdr, tex->tiles[i], &tile_mg.tile_rect, &dst);
         }
     }
-    SDL_RenderCopy(game->rdr, tex->player, NULL,&(player->hero_screen));
+    SDL_RenderCopy(game->rdr, tex->player, &(player->player_rect),&(player->hero_screen));
 
 }
 

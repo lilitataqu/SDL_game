@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 }
     
     Render_Init(&game,&world,&player);
-    
+    //这个判断游戏是否运行
     game.running = 1;
     player.battle_state = false;
 

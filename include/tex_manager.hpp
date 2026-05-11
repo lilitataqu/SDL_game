@@ -25,6 +25,7 @@ typedef enum
     MENU,
     MENU_SELECT_BOX,
     MENU_POKEMON_BG,
+    MENU_POKEMON_BG_BOX,
     UI_NUM
 }UI;
 
@@ -54,14 +55,16 @@ private:
     std::vector<std::string> bg_paths;
     std::vector<std::string> pokemon_paths;
     std::vector<std::string> ui_paths;
-    KeyRepeat menu_box;
 public:
+    KeyRepeat menu_box;
     TEX btl_bg[BATTLE_BG_NUM];
     TEX pokemon_tex[BATTLE_POKEMON_NUM];
     TEX ui[UI_NUM];
     std::vector<SDL_Texture*> tiles;
     SDL_Texture *player;
+    
     void move_mens_box();
+    void move_mens_pokemon_box();
     Tex_Manager(SDL_Renderer* renderer);
     ~Tex_Manager();
 };
